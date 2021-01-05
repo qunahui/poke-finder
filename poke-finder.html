@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./styles.css"/>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+<body style="min-height: 101%; overflow: scroll;">
+  <div class="container">
+    <div class="searchContainer">
+      <h1>Search pokemon</h1>
+      <p class="lead">Enter a name or number base on pokedex: </p>
+      <input type="text" class="form-control" placeholder="Pokemon name or number...">
+    </div>
+    <br>
+    <div class="container" id="card-desk">
+    </div> 
+    <button id="load-more" onclick="show()" style="display: none;"></button>
+    <img src="./spinner.svg" class="rounded mx-auto d-block"/>
+  </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous"></script>
+<script>
+  const proxy = "https://cors-anywhere.herokuapp.com/";
+  var result;
+  var loadMoreButton = document.getElementById("load-more");
+  var curPos = 0;
+  var pageSize = 4;
+  var cardDesk = document.getElementById("card-desk");
+
+  (async function() {
+    const res = await axios.get(proxy +'https://www.pokemon.com/us/api/pokedex/kalos', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+    })
+    result = res.data
+    
+    show()
+    show()
+  })()
+
+  async function show() {
+    let realShowSize = curPos + pageSize
+    const row = document.createElement('div')
+    let rowContent ='';
+    while(curPos < realShowSize) {
+      let jumpSize = 1
+      if(curPos > 0) { 
+        let i = curPos
+        while(result[i].id === result[i + 1].id){
+          realShowSize++
+          jumpSize++
+          i++
+        }
+      }
+      // card render
+      rowContent +=`
+      <div class="col-sm col-xs-12 bound-card">
+        <div class="card">
+          <img class="card-img-top" src=${result[curPos].ThumbnailImage} alt="Poke thumbnail">
+          <div class="card-body">
+            <h5 class="card-title">${'#' + result[curPos].number + " " + result[curPos].name}</h5>
+            <button style="background-color: ${typeColorPicker(result[curPos].type[0])}; color: white;">${result[curPos].type[0]}</button>
+        `
+      if(!!result[curPos].type[1]) {
+        rowContent +=`<button style="background-color: ${typeColorPicker(result[curPos].type[1])}; color: white;">${result[curPos].type[1]}</button>`
+      }
+      rowContent += "</div></div></div>"
+
+      //
+      curPos+=jumpSize
+    }
+    row.innerHTML = rowContent + "</div>"
+    row.className="row mb-4"
+    cardDesk.append(row)
+  }
+
+  function typeColorPicker(type){
+    switch(type){
+      case 'bug': return "#ad8b00";
+      case 'dark': return "#612500";
+      case 'dragon': return "#9254de";
+      case 'electric': return "#faad14";
+      case 'fairy': return "#ff85c0";
+      case 'fighting': return "#ad4e00";
+      case 'fire': return "#f5222d";
+      case 'flying': return "#40a9ff";
+      case 'ghost': return "#531dab";
+      case 'grass': return "#73d13d";
+      case 'ground': return "#ffd666";
+      case 'ice': return "#69c0ff";
+      case 'normal': return "#bfbfbf";
+      case 'poison': return "#531dab";
+      case 'psychic': return "#eb2f96";
+      case 'rock': return "#614700";
+      case 'steel': return "#595959";
+      case 'water': return "#0050b3";
+    }
+  }
+
+  window.onscroll = function(ev) {
+    if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight) {
+      setTimeout(() => loadMoreButton.click(), 300)
+    }
+  }
+</script>
+</html>
